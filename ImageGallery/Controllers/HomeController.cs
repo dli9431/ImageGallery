@@ -1,16 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ImageGallery.Models;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace ImageGallery.Controllers
 {
     public class HomeController : Controller
     {
-        public ActionResult Index()
+        private ImageContext db = new ImageContext();
+
+        public ActionResult Index(string filter = null, int page = 1, int pageSize = 5)
         {
-            return View();
+            var records = new PagedList<Image>();
+            records.Content = db.Images
+                .Where(a => filter == null || (a.name.Contains(filter)))
+                .OrderBy(a => a.name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Count
+            records.TotalRecords = db.Images
+                .Where(a => filter == null || (a.name.Contains(filter))).Count();
+
+            records.CurrentPage = page;
+            records.PageSize = pageSize;
+            return View(records);
         }
 
         public ActionResult About()
